@@ -1,0 +1,16 @@
+.venv/
+venv/
+__pycache__/
+*.pt
+*.bin
+*.out
+*.log
+*.safetensors
+*.json
+*.csv
+.DS_Store
+
+# User generated directories
+legal_petition_model/
+legalverse_task1_model/
+results_distilbert_petition/

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Legal Petition Analyzer</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <div class="app-container">
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>LegalAI</h2>
+                <button id="close-sidebar-btn" class="icon-btn" aria-label="Close sidebar" title="Close sidebar">
+                    <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round"
+                        stroke-linejoin="round" height="1.2em" width="1.2em" xmlns="http://www.w3.org/2000/svg">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="sidebar-content">
+                <button class="new-chat-btn" onclick="location.reload()">
+                    <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round"
+                        stroke-linejoin="round" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    New Petition
+                </button>
+                <div class="model-info">
+                    <p><strong>Models Loaded:</strong></p>
+                    <ul>
+                        <li><span class="dot"></span> DistilBERT Classifier</li>
+                        <li><span class="dot"></span> Qwen 1.5B Generative</li>
+                    </ul>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="chat-area">
+
+            <header class="chat-header">
+                <button id="open-sidebar-btn" class="icon-btn hidden" aria-label="Open sidebar" title="Open sidebar">
+                    <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round"
+                        stroke-linejoin="round" height="1.2em" width="1.2em" xmlns="http://www.w3.org/2000/svg">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <h3>Petition Analysis Sandbox</h3>
+            </header>
+
+            <div class="chat-history" id="chat-history">
+
+                <!-- Initial AI Welcome Message -->
+                <div class="message ai-message">
+                    <div class="avatar ai-avatar">AI</div>
+                    <div class="message-content">
+                        <p>Welcome to the LegalAI Petition Analyzer. Please paste the full text of the legal petition
+                            you would like me to review.</p>
+                        <p><em>(I will predict if it should be Admitted or Dismissed, and offer 3 structured suggestions
+                                for improvement based on the text.)</em></p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-container">
+                <div class="input-box">
+                    <textarea id="petition-input" placeholder="Paste legal petition text here..." rows="3"></textarea>
+                    <button id="send-btn" aria-label="Send message">
+                        <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24"
+                            stroke-linecap="round" stroke-linejoin="round" height="1em" width="1em"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </div>
+                <div class="disclaimer">
+                    100% Local Execution. No data leaves your machine.
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Script for handling the API calls -->
+    <script src="/static/script.js"></script>
+</body>
+
+</html>
