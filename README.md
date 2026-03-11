@@ -186,7 +186,7 @@ of 63-72%.
 Focus: NLP • Legal AI • Full Stack Development
 
 [![GitHub](https://img.shields.io/badge/GitHub-EktaC06-black?logo=github)](https://github.com/EktaC06)
-[![GitHub](https://img.shields.io/badge/GitHub-EktaC06-black?logo=github)]((https://github.com/santu567))
+[![GitHub](https://img.shields.io/badge/GitHub-santu567-black?logo=github)]((https://github.com/santu567))
 
 ---
 
