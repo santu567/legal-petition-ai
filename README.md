@@ -182,10 +182,11 @@ of 63-72%.
 
 ## 👩‍💻 Built By
 
-**Ekta** — Final Year B.Tech Project  
+**Ekta**, **Santu** — Final Year B.Tech Project  
 Focus: NLP • Legal AI • Full Stack Development
 
 [![GitHub](https://img.shields.io/badge/GitHub-EktaC06-black?logo=github)](https://github.com/EktaC06)
+[![GitHub](https://img.shields.io/badge/GitHub-EktaC06-black?logo=github)]((https://github.com/santu567))
 
 ---
 
