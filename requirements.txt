@@ -1,0 +1,16 @@
+transformers==4.40.0
+datasets==2.19.0
+faiss-cpu
+shap==0.45.0
+lime==0.2.0.1
+fastapi==0.111.0
+uvicorn==0.30.0
+sqlalchemy==2.0.30
+pydantic==2.7.0
+pandas==2.2.0
+scikit-learn==1.4.0
+numpy==1.26.0
+pytest==8.2.0
+python-dotenv==1.0.1
+psycopg2-binary==2.9.9
+accelerate
