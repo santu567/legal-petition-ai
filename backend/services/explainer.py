@@ -7,7 +7,7 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import os
 import re
 
-DEVICE     = "cuda" if torch.cuda.is_available() else "cpu"
+DEVICE = "cpu"
 MODEL_PATH = os.path.join(
     os.path.dirname(__file__),
     "../../ml/models/inlegalbert-finetuned"
