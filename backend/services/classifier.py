@@ -5,7 +5,7 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import re
 import os
 
-DEVICE = "cpu"
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 MODEL_PATH = os.path.join(
     os.path.dirname(__file__),
     "../../ml/models/inlegalbert-finetuned"
@@ -32,12 +32,19 @@ def load_model():
 
 
 def clean_text(text: str) -> str:
-    """Clean petition text before prediction."""
+    """Clean petition text and extract head + tail for better context."""
     if not isinstance(text, str):
         return ""
     text = re.sub(r'\s+', ' ', text).strip()
     words = text.split()
-    return ' '.join(words[:200])
+    
+    # Petitions are long. The actual legal grounds and prayers are
+    # usually at the end. We capture the first 150 words (context) 
+    # and the last 250 words (grounds/prayer).
+    if len(words) > 400:
+        words = words[:150] + words[-250:]
+        
+    return ' '.join(words)
 
 
 def predict(text: str) -> dict:
@@ -47,7 +54,7 @@ def predict(text: str) -> dict:
         cleaned,
         return_tensors="pt",
         truncation=True,
-        max_length=256,
+        max_length=512,
         padding=True
     ).to(DEVICE)
 
@@ -57,9 +64,17 @@ def predict(text: str) -> dict:
 
     admit_prob  = float(probs[1])
     reject_prob = float(probs[0])
-    pred_class  = int(probs.argmax())
-    prediction  = "ADMITTED" if pred_class == 1 else "REJECTED"
-    confidence  = round(max(admit_prob, reject_prob) * 100, 2)
+    
+    # Lower admission threshold to 0.35 to balance false negatives and positives
+    # This compensates for severe class imbalance in the training data
+    ADMIT_THRESHOLD = 0.35
+    prediction = "ADMITTED" if admit_prob > ADMIT_THRESHOLD else "REJECTED"
+    
+    # Calibrate confidence based on the threshold adjustment
+    if prediction == "ADMITTED":
+        confidence = round(admit_prob * 100, 2)
+    else:
+        confidence = round(reject_prob * 100, 2)
 
     # Get confidence band
     band = get_confidence_band(prediction, confidence)
