@@ -771,28 +771,23 @@ export default function Landing() {
           <div style={{
             display: 'flex', justifyContent: 'center', gap: '16px'
           }}>
-            {[
-              { name: '👩‍💻 Ekta', role: 'ML Pipeline + Full Stack' },
-              { name: '👨‍💻 Santu', role: 'Generative AI + Backend' },
-            ].map((m, i) => (
-              <div key={i} className="card" style={{
-                padding: '20px 32px', textAlign: 'center'
+            <div className="card" style={{
+              padding: '20px 32px', textAlign: 'center'
+            }}>
+              <div style={{
+                fontFamily: "'Playfair Display', serif",
+                fontSize: '18px', fontWeight: '600',
+                marginBottom: '6px'
               }}>
-                <div style={{
-                  fontFamily: "'Playfair Display', serif",
-                  fontSize: '18px', fontWeight: '600',
-                  marginBottom: '6px'
-                }}>
-                  {m.name}
-                </div>
-                <div style={{
-                  fontFamily: "'DM Mono', monospace", fontSize: '10px',
-                  color: 'var(--gold)', letterSpacing: '.08em'
-                }}>
-                  {m.role}
-                </div>
+                LegalAI Research Team
               </div>
-            ))}
+              <div style={{
+                fontFamily: "'DM Mono', monospace", fontSize: '10px',
+                color: 'var(--gold)', letterSpacing: '.08em'
+              }}>
+                ML Pipeline · Generative AI · Full Stack
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -825,7 +820,7 @@ export default function Landing() {
           letterSpacing: '.08em', color: 'var(--muted)'
         }}>
           ⚖️ LegalAI — Advisory system only. Not legal advice.
-          Built by Ekta & Santu | Final Year B.Tech Project
+          Final Year B.Tech Project | Judicial Intelligence Research
         </div>
       </footer>
 

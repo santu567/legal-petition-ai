@@ -263,7 +263,7 @@ export default function Login() {
           <div>
             <div style={{ width: 48, height: 1, background: 'var(--border)', marginBottom: 20 }} />
             <p className="text-caption">
-              Final Year B.Tech Project &mdash; Ekta &amp; Santu
+              Final Year B.Tech Research Project
             </p>
             <p className="text-caption" style={{ marginTop: 4 }}>
               Models: InLegalBERT &bull; Qwen 2.5 &bull; SHAP &bull; FAISS

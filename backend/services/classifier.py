@@ -27,12 +27,12 @@ def load_model():
         return
     print(f"Loading InLegalBERT from {MODEL_PATH}...")
     _tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
-    _model = AutoModelForSequenceClassification.from_pretrained(
-        MODEL_PATH
-    )
+    _model = AutoModelForSequenceClassification.from_pretrained(MODEL_PATH)
     _model.to(DEVICE)
+    if DEVICE == "cuda":
+        _model.half() # 2x faster, 50% less VRAM
     _model.eval()
-    print(f"InLegalBERT loaded on {DEVICE.upper()}")
+    print(f"InLegalBERT Optimized on {DEVICE.upper()}")
 
 
 def clean_text(text: str) -> str:

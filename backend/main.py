@@ -100,9 +100,27 @@ def get_current_user(
 @app.on_event("startup")
 async def startup():
     create_tables()
-    print("\n--- LOADING AI MODELS ---")
-    load_classifier()
-    print("--- MODELS READY ---\n")
+    print("\n" + "="*50)
+    print("🚀 LEGALAI STARTUP — LOADING MODELS")
+    print("="*50)
+    
+    try:
+        from services.classifier import load_model as l1
+        from services.generator import load_model as l2
+        from services.retriever import load_model as l3
+        
+        print("▸ Loading Classifier...")
+        l1()
+        print("▸ Loading Generative AI...")
+        l2()
+        print("▸ Loading FAISS Retriever...")
+        l3()
+        
+        print("="*50)
+        print("✅ ALL MODELS ONLINE")
+        print("="*50 + "\n")
+    except Exception as e:
+        print(f"❌ MODEL LOADING FAILED: {str(e)}")
 
 
 # ── Auth Routes ───────────────────────────────────────────────────
@@ -280,43 +298,71 @@ async def analyze(
                 f"Please upgrade your plan."
             )
 
+    import time
+    start_time = time.time()
+    
     try:
         # Step 1 — Classify
+        print(f"▸ Analyzing text ({len(text)} chars)...")
         result = predict(text)
+        p_time = time.time()
+        print(f"  ✓ Classified in {p_time - start_time:.2f}s")
 
         # Step 2 — Confidence band
         band = get_band(result["prediction"], result["confidence"])
 
-        # Step 3 — Explanation
-        explanation = ""
-        if request.generate_explanation:
-            from services.generator import generate_explanation
-            gen         = generate_explanation(text, result["prediction"])
-            explanation = gen["explanation"]
+        # Step 3 & 4 — Parallelize Explanation and Retrieval
+        import asyncio
+        from services.generator import generate_explanation as gen_task
+        from services.retriever import find_similar_cases as ret_task
 
-        # Step 4 — Similar cases
-        similar = []
-        try:
-            from services.retriever import find_similar_cases
-            similar = find_similar_cases(text, top_k=3)
-        except Exception:
-            pass
+        async def get_explanation():
+            if not request.generate_explanation:
+                return ""
+            try:
+                # Run CPU/GPU bound task in thread
+                res = await asyncio.to_thread(gen_task, text, result["prediction"])
+                return res["explanation"]
+            except Exception as e:
+                print(f"  ⚠ Explanation failed: {str(e)}")
+                return "Analysis rationale temporarily unavailable."
+
+        async def get_similar():
+            try:
+                return await asyncio.to_thread(ret_task, text, 3)
+            except Exception as e:
+                print(f"  ⚠ Retrieval failed: {str(e)}")
+                return []
+
+        # Execute concurrently
+        explanation, similar = await asyncio.gather(
+            get_explanation(),
+            get_similar()
+        )
+        p_time_end = time.time()
+        print(f"  ✓ Sub-tasks completed in {p_time_end - p_time:.2f}s")
 
         # Step 5 — Save to history if logged in
         if current_user:
-            analysis = Analysis(
-                user_id      = current_user.id,
-                petition_text= text[:500],
-                prediction   = result["prediction"],
-                confidence   = result["confidence"],
-                admit_prob   = result["admit_prob"],
-                reject_prob  = result["reject_prob"],
-                band         = band["band"],
-                explanation  = explanation[:1000] if explanation else ""
-            )
-            db.add(analysis)
-            current_user.analyses_used += 1
-            db.commit()
+            try:
+                analysis = Analysis(
+                    user_id      = current_user.id,
+                    petition_text= text[:500],
+                    prediction   = result["prediction"],
+                    confidence   = result["confidence"],
+                    admit_prob   = result["admit_prob"],
+                    reject_prob  = result["reject_prob"],
+                    band         = band["band"],
+                    explanation  = explanation[:1000] if explanation else ""
+                )
+                db.add(analysis)
+                current_user.analyses_used += 1
+                db.commit()
+            except Exception as e:
+                print(f"  ⚠ DB Save failed: {str(e)}")
+
+        total_time = time.time() - start_time
+        print(f"✅ Total Analysis Time: {total_time:.2f}s\n")
 
         return {
             "prediction"   : result["prediction"],
@@ -327,7 +373,8 @@ async def analyze(
             "band_message" : band["band_message"],
             "urgency"      : band["urgency"],
             "explanation"  : explanation,
-            "similar_cases": similar
+            "similar_cases": similar,
+            "latency"      : round(total_time, 2)
         }
 
     except HTTPException:
@@ -336,3 +383,7 @@ async def analyze(
         import traceback
         traceback.print_exc()
         raise HTTPException(500, f"Analysis failed: {str(e)}")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

@@ -3,6 +3,11 @@
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 import os
+import bcrypt
+# Passlib/Bcrypt 4.0+ compatibility patch
+if not hasattr(bcrypt, "__about__"):
+    bcrypt.__about__ = type('About', (object,), {'__version__': getattr(bcrypt, '__version__', '4.0.0')})
+
 from database.models import User
 
 # ── Password Hashing ─────────────────────────────────────────────
@@ -112,8 +117,8 @@ def get_user_by_id(db: Session, user_id: int) -> User:
 
 # ── Usage Limits ─────────────────────────────────────────────────
 PLAN_LIMITS = {
-    "free": 5,
-    "pro": 50,
+    "free": 50,
+    "pro": 100,
     "enterprise": 1000
 }
 

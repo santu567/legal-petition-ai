@@ -8,7 +8,7 @@ import os
 import pickle
 from transformers import AutoTokenizer, AutoModel
 
-DEVICE = "cpu"
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 MODEL_PATH = os.path.join(
     os.path.dirname(__file__),
     "../../ml/models/inlegalbert-finetuned"

@@ -3,8 +3,8 @@
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-DEVICE = "cpu"
-MODEL_NAME = "Qwen/Qwen2.5-1.5B-Instruct"
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"
 
 # Global — loaded once
 _tokenizer = None
@@ -18,74 +18,54 @@ def load_model():
     if _model is not None:
         return
 
-    print(f"Loading Qwen model ({MODEL_NAME})...")
-    print("First run downloads ~3GB — please wait...")
-
+    print(f"Loading Ultra-Fast 0.5B Model ({MODEL_NAME}) on {DEVICE.upper()}...")
+    
     _tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
     _model = AutoModelForCausalLM.from_pretrained(
         MODEL_NAME,
         torch_dtype=torch.float16 if DEVICE == "cuda" else torch.float32,
         low_cpu_mem_usage=True
-    )
-    _model.to(DEVICE)
+    ).to(DEVICE)
     _model.eval()
-    print(f"Qwen loaded on {DEVICE.upper()}!")
+    print(f"Qwen 0.5B ready!")
 
 
 def generate_explanation(text: str, prediction: str) -> dict:
     """
-    Generate legal explanation and improvement suggestions.
+    Generate in-depth legal analysis and improvement suggestions.
     prediction: 'ADMITTED' or 'REJECTED'
     Returns dict with 'explanation' key.
     """
     load_model()
 
-    # Truncate long texts
-    if len(text) > 2000:
-        text = text[:2000] + "... [truncated]"
+    # Truncate text for context while maintaining high depth
+    if len(text) > 3000:
+        text = text[:3000] + "..."
 
     system_prompt = (
-        "You are an expert Indian legal assistant specializing "
-        "in Supreme Court and High Court petition analysis. "
-        "You provide professional, structured legal reasoning."
+        "You are a senior Indian legal advocate specializing in Supreme Court and High Court litigation. "
+        "Provide a comprehensive, authoritative, and multi-faceted legal analysis. Be elaborate and detailed."
     )
 
     if prediction == "ADMITTED":
         user_prompt = f"""
-The following legal petition was ADMITTED by the court.
+The following petition was ADMITTED based on initial classification. Provide a deep structural analysis using EXACTLY these 4 headers:
+1. REASON FOR ADMISSION: [Elaborate extensively on the core constitutional or legal grounds that justify admission. Detail why current laws and precedents favor this matter.]
+2. KEY STRENGTHS: [Identify and explain 3-4 major strengths in the petition's logic, factual background, or legal framing.]
+3. LEGAL GROUNDS TO STRENGTHEN: [Even as an admitted case, provide a detailed recommendation on which legal precedents or constitutional articles should be reinforced to ensure final victory.]
+4. EXPLANATION OF ADMISSION (SUMMARY): [A detailed 4-5 sentence summary of the overall analysis.]
 
-Petition Text:
-\"\"\"{text}\"\"\"
-
-Provide your response in EXACTLY this format:
-
-REASON FOR ADMISSION:
-[Write 2-3 sentences explaining why this petition meets admission criteria]
-
-KEY STRENGTHS:
-1. [Strength 1]
-2. [Strength 2]
-3. [Strength 3]
+Petition: {text}
 """
     else:
         user_prompt = f"""
-The following legal petition was REJECTED by the court.
+The following petition was REJECTED based on initial classification. Provide a deep structural analysis using EXACTLY these 4 headers:
+1. REASON FOR REJECTION: [Provide an exhaustive legal explanation for the rejection. Cite potential jurisdictional overlaps, lack of locus standi, or procedural non-compliance in detail. Do not be brief.]
+2. REQUIRED IMPROVEMENTS TO REAPPLY: [List 4-5 highly detailed and specific legal/procedural improvements required to make this petition fit for filing. Describe how to implement each improvement.]
+3. LEGAL GROUNDS TO STRENGTHEN: [Analyze and detail specific legal grounds—statutes, articles, or previous judgments—that were weak and need thorough research and reinforcement.]
+4. EXPLANATION OF REJECTION (SUMMARY): [A detailed 4-5 sentence summary of why this petition was deemed insufficient and what the core strategy should be moving forward.]
 
-Petition Text:
-\"\"\"{text}\"\"\"
-
-Provide your response in EXACTLY this format:
-
-REASON FOR REJECTION:
-[Write 2-3 sentences explaining why this petition was rejected]
-
-REQUIRED IMPROVEMENTS TO REAPPLY:
-1. [Specific improvement 1]
-2. [Specific improvement 2]
-3. [Specific improvement 3]
-
-LEGAL GROUNDS TO STRENGTHEN:
-[One sentence on the strongest legal argument to develop]
+Petition: {text}
 """
 
     messages = [
@@ -99,18 +79,15 @@ LEGAL GROUNDS TO STRENGTHEN:
         add_generation_prompt=True
     )
 
-    model_inputs = _tokenizer(
-        [text_input],
-        return_tensors="pt"
-    ).to(DEVICE)
+    model_inputs = _tokenizer([text_input], return_tensors="pt").to(DEVICE)
 
     with torch.no_grad():
         generated_ids = _model.generate(
             **model_inputs,
-            max_new_tokens=400,
-            temperature=0.2,
-            top_p=0.9,
+            max_new_tokens=450, # Significantly increased for elaboration
+            temperature=0.2, 
             do_sample=True,
+            top_p=0.9,
             pad_token_id=_tokenizer.eos_token_id
         )
 
