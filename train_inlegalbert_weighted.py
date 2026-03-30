@@ -21,10 +21,11 @@ MAX_LENGTH = 512
 print("Loading dataset from", DATA_PATH)
 df = pd.read_csv(DATA_PATH)
 
-# Assume the columns are 'text' and 'label' (0=Rejected, 1=Admitted)
-# If your CSV has different names, change them here:
-TEXT_COL = "text"
-LABEL_COL = "label"
+# Auto-detect column names
+TEXT_COL = next((col for col in df.columns if 'text' in col.lower() or 'petition' in col.lower()), "text")
+LABEL_COL = next((col for col in df.columns if 'label' in col.lower() or 'target' in col.lower() or 'outcome' in col.lower()), "label")
+
+print(f"Using '{TEXT_COL}' for text and '{LABEL_COL}' for labels.")
 
 # Clean out any empty rows
 df = df[[TEXT_COL, LABEL_COL]].dropna().reset_index(drop=True)
@@ -68,6 +69,8 @@ print("Tokenizing data...")
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
 hf_dataset = Dataset.from_pandas(df)
+# Hugging Face requires the label column to be formally explicitly cast as a 'ClassLabel' before it can stratify
+hf_dataset = hf_dataset.class_encode_column(LABEL_COL)
 hf_dataset = hf_dataset.train_test_split(test_size=0.1, stratify_by_column=LABEL_COL, seed=42)
 
 def tokenize_function(examples):
@@ -111,10 +114,12 @@ model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, num_label
 
 training_args = TrainingArguments(
     output_dir=OUTPUT_DIR,
-    num_train_epochs=3,                     # 3 to 4 epochs is usually enough
-    per_device_train_batch_size=8,          # Lower batch size since MAX_LENGTH is now 512
-    per_device_eval_batch_size=16,
-    eval_strategy="epoch",
+    num_train_epochs=3,                     
+    per_device_train_batch_size=4,          # Lowered batch size to fit strictly inside 4GB RTX 3050
+    gradient_accumulation_steps=2,          # Keeps the math the same by combining 2 small batches!
+    per_device_eval_batch_size=8,
+    fp16=True,                              # CRITICAL: Slices GPU memory size in half!
+    evaluation_strategy="epoch",
     save_strategy="epoch",
     learning_rate=2e-5,                     # Keep LR small to prevent catastrophic forgetting
     weight_decay=0.01,
@@ -128,7 +133,7 @@ trainer = WeightedTrainer(
     args=training_args,
     train_dataset=tokenized_datasets["train"],
     eval_dataset=tokenized_datasets["test"],
-    processing_class=tokenizer,
+    tokenizer=tokenizer,
     compute_metrics=compute_metrics,
 )
 

@@ -1,14 +1,18 @@
 # backend/services/classifier.py
 
+import os
+
+# Physically block Windows from confusing the terminals by forcing it exactly to the RTX 3050 BEFORE PyTorch wakes up.
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
 import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import re
-import os
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 MODEL_PATH = os.path.join(
     os.path.dirname(__file__),
-    "../../ml/models/inlegalbert-finetuned"
+    "../../ml/models/inlegalbert-finetuned-v2"
 )
 
 # Global — loaded once

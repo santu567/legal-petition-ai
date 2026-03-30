@@ -408,7 +408,7 @@ export default function Landing() {
       }}>
         {[
           { number: '32,302', label: 'Court Cases Trained' },
-          { number: '57%+',   label: 'Prediction Accuracy' },
+          { number: '74%+',   label: 'Prediction Accuracy' },
           { number: '4 AI',   label: 'Models Working Together' },
           { number: '100%',   label: 'Private & Local' },
         ].map((s, i) => (

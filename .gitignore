@@ -1,16 +1,19 @@
 .venv/
 venv/
 __pycache__/
+node_modules/
+frontend/node_modules/
 *.pt
 *.bin
 *.out
 *.log
 *.safetensors
-*.json
 *.csv
 .DS_Store
 
-# User generated directories
+# Ignore massive AI Neural Networks to avoid GitHub 100MB crash
+ml/models/
 legal_petition_model/
 legalverse_task1_model/
 results_distilbert_petition/
+results_inlegalbert/

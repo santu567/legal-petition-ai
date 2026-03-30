@@ -82,9 +82,9 @@ def evaluate_new_accuracy(csv_path="ml/data/processed/test.csv", sample_size=500
     
     print("\nNext Steps:")
     if false_negatives > false_positives:
-        print("Model is still slightly biased toward rejection. You can lower the ADMIT_THRESHOLD in classifier.py from 0.40 to 0.35.")
+        print("Model is slightly biased toward rejection. You can slightly adjust the ADMIT_THRESHOLD in classifier.py to balance the ratio.")
     else:
-        print("The threshold balance looks very healthy.")
+        print("The threshold balance between False Positives and False Negatives is healthy!")
 
 if __name__ == "__main__":
     evaluate_new_accuracy()
