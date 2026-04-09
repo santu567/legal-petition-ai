@@ -8,10 +8,7 @@ import os
 import re
 
 DEVICE = "cpu"
-MODEL_PATH = os.path.join(
-    os.path.dirname(__file__),
-    "../../ml/models/inlegalbert-finetuned"
-)
+MODEL_PATH = "chnitu/legal-petition-v1"
 
 # Global — loaded once
 _tokenizer = None
@@ -115,29 +112,29 @@ def get_shap_explanation(text: str, prediction: str) -> dict:
 
     # Separate positive and negative influences
     # Common words to ignore — not meaningful for lawyers
-STOP_WORDS = {
-    'the', 'a', 'an', 'is', 'in', 'of', 'to', 'and', 'or',
-    'this', 'that', 'it', 'its', 'for', 'on', 'at', 'by',
-    'was', 'were', 'has', 'have', 'had', 'be', 'been',
-    'filed', 'writ', 'petition', 'court', 'order', 'case',
-    'respondent', 'petitioner', 'appellant', 'high', 'the'
-}
+    STOP_WORDS = {
+        'the', 'a', 'an', 'is', 'in', 'of', 'to', 'and', 'or',
+        'this', 'that', 'it', 'its', 'for', 'on', 'at', 'by',
+        'was', 'were', 'has', 'have', 'had', 'be', 'been',
+        'filed', 'writ', 'petition', 'court', 'order', 'case',
+        'respondent', 'petitioner', 'appellant', 'high', 'the'
+    }
 
-pushing_toward_admit = [
-    {"word": w.strip(), "score": round(float(s), 4)}
-    for w, s in word_scores
-    if s > 0.01
-    and len(w.strip()) > 3
-    and w.strip().lower() not in STOP_WORDS
-][:5]
+    pushing_toward_admit = [
+        {"word": w.strip(), "score": round(float(s), 4)}
+        for w, s in word_scores
+        if s > 0.01
+        and len(w.strip()) > 3
+        and w.strip().lower() not in STOP_WORDS
+    ][:5]
 
-pushing_toward_reject = [
-    {"word": w.strip(), "score": round(float(s), 4)}
-    for w, s in word_scores
-    if s < -0.01
-    and len(w.strip()) > 3
-    and w.strip().lower() not in STOP_WORDS
-][:5]
+    pushing_toward_reject = [
+        {"word": w.strip(), "score": round(float(s), 4)}
+        for w, s in word_scores
+        if s < -0.01
+        and len(w.strip()) > 3
+        and w.strip().lower() not in STOP_WORDS
+    ][:5]
 
     # ── Generate human readable summary ──────────────────────
     summary = build_summary(

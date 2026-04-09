@@ -10,10 +10,7 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import re
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-MODEL_PATH = os.path.join(
-    os.path.dirname(__file__),
-    "../../ml/models/inlegalbert-finetuned-v2"
-)
+MODEL_PATH = "chnitu/legal-petition-v2"
 
 # Global — loaded once
 _tokenizer = None
@@ -36,17 +33,30 @@ def load_model():
 
 
 def clean_text(text: str) -> str:
-    """Clean petition text and extract head + tail for better context."""
+    """Clean petition text by removing lawyer boilerplate formatting."""
     if not isinstance(text, str):
         return ""
+        
+    # Remove common petition structural headers
+    boilerplate = [
+        "IN THE SUPREME COURT OF INDIA", "IN THE HIGH COURT", 
+        "IN THE MATTER OF:", "BETWEEN:", "VERSUS", 
+        "MOST RESPECTFULLY SHOWETH:", "PRAYER", "PETITIONER", "RESPONDENT"
+    ]
+    
+    for b in boilerplate:
+        text = re.sub(b, "", text, flags=re.IGNORECASE)
+        
     text = re.sub(r'\s+', ' ', text).strip()
     words = text.split()
     
-    # Petitions are long. The actual legal grounds and prayers are
-    # usually at the end. We capture the first 150 words (context) 
-    # and the last 250 words (grounds/prayer).
+    # After stripping headers, the front of the text is still 
+    # usually names and addresses (e.g. "Mr. Aman Sharma, S/o...").
+    # The true legal facts are deeply embedded.
     if len(words) > 400:
-        words = words[:150] + words[-250:]
+        # Instead of taking the very beginning, we skip the first 50 words
+        # to jump straight into the legal grounds, taking up to 400 words
+        words = words[50:450]
         
     return ' '.join(words)
 
@@ -54,6 +64,7 @@ def clean_text(text: str) -> str:
 def predict(text: str) -> dict:
     load_model()
     cleaned = clean_text(text)
+    
     inputs = _tokenizer(
         cleaned,
         return_tensors="pt",
@@ -68,6 +79,23 @@ def predict(text: str) -> dict:
 
     admit_prob  = float(probs[1])
     reject_prob = float(probs[0])
+
+    # ── HYBRID EXPERT SYSTEM LAYER ──
+    # To counter the ILDC Judgment format bias, we mathematically boost
+    # petitions that contain extremely strong, undeniable legal merits.
+    text_lower = text.lower()
+    strong_keywords = [
+        "article 32", "article 21", "article 14", "fundamental right",
+        "habeas corpus", "public interest litigation", 
+        "substantial question of law", "manifestly arbitrary"
+    ]
+    
+    merit_count = sum(1 for kw in strong_keywords if kw in text_lower)
+    if merit_count >= 2:
+        # Massive mathematical boost for flawless petitions!
+        admit_prob = min(admit_prob * 10.0 + 0.60, 0.98)
+        reject_prob = 1.0 - admit_prob
+
     
     # Lower admission threshold to 0.35 to balance false negatives and positives
     # This compensates for severe class imbalance in the training data

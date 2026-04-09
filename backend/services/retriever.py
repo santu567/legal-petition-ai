@@ -9,10 +9,7 @@ import pickle
 from transformers import AutoTokenizer, AutoModel
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-MODEL_PATH = os.path.join(
-    os.path.dirname(__file__),
-    "../../ml/models/inlegalbert-finetuned"
-)
+MODEL_PATH = "chnitu/legal-petition-v1"
 DATA_PATH  = os.path.join(
     os.path.dirname(__file__),
     "../../ml/data/cleaned/train.csv"

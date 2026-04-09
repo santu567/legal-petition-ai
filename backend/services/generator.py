@@ -11,6 +11,61 @@ _tokenizer = None
 _model     = None
 
 
+def translate_to_judgment_format(text: str) -> str:
+    """
+    Use Qwen to translate a lawyer's draft petition into the academic
+    style of a final Supreme Court Judgment so InLegalBERT can recognize it.
+    """
+    load_model()
+    
+    if len(text) > 2000:
+        text = text[:2000] + "..."
+
+    system_prompt = (
+        "You are an AI legal assistant that converts lawyer draft petitions into the academic style of a final Supreme Court Judgment."
+    )
+    
+    user_prompt = f"""
+    Please rewrite the core legal facts and cited articles of the following draft petition as if it were a Supreme Court Judgment summary. 
+    Use phrases like 'The appellant contends', 'It is undisputed that', etc. Do not include lawyer formatting like 'MOST RESPECTFULLY SHOWETH'. 
+    Strictly summarize the legal arguments in one dense paragraph.
+    
+    Draft Petition:
+    {text}
+    """
+    
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user",   "content": user_prompt}
+    ]
+    
+    text_input = _tokenizer.apply_chat_template(
+        messages,
+        tokenize=False,
+        add_generation_prompt=True
+    )
+    
+    model_inputs = _tokenizer([text_input], return_tensors="pt").to(DEVICE)
+    
+    with torch.no_grad():
+        generated_ids = _model.generate(
+            **model_inputs,
+            max_new_tokens=150,  # Keep it short and fast (~10s)
+            temperature=0.1,     # Very factual, low creativity
+            do_sample=True,
+            top_p=0.9,
+            pad_token_id=_tokenizer.eos_token_id
+        )
+        
+    prompt_length = model_inputs.input_ids.shape[1]
+    output = _tokenizer.decode(
+        generated_ids[0][prompt_length:],
+        skip_special_tokens=True
+    ).strip()
+    
+    return output
+
+
 def load_model():
     """Load Qwen generative model once on startup."""
     global _tokenizer, _model
