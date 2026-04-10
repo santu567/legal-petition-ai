@@ -188,8 +188,8 @@ export default function Login() {
 
     try {
       const url = tab === 'login'
-        ? 'http://localhost:8000/api/auth/login'
-        : 'http://localhost:8000/api/auth/register';
+        ? 'https://chnitu-legal-api.hf.space/api/auth/login'
+        : 'https://chnitu-legal-api.hf.space/api/auth/register';
 
       const payload = tab === 'login'
         ? { email: form.email.trim(), password: form.password }

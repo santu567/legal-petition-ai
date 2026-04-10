@@ -446,9 +446,9 @@ export default function Dashboard() {
       if (!token) return;
       const headers = { Authorization: `Bearer ${token}` };
       try {
-        const userRes = await axios.get('http://localhost:8000/api/auth/me', { headers });
+        const userRes = await axios.get('https://chnitu-legal-api.hf.space/api/auth/me', { headers });
         setUser(userRes.data);
-        const historyRes = await axios.get('http://localhost:8000/api/history', { headers });
+        const historyRes = await axios.get('https://chnitu-legal-api.hf.space/api/history', { headers });
         setChats(historyRes.data.map(item => ({
           id: item.id,
           title: item.excerpt.substring(0, 35) + '...',
@@ -490,7 +490,7 @@ export default function Dashboard() {
     try {
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const res = await axios.post('http://localhost:8000/api/analyze', { 
+      const res = await axios.post('https://chnitu-legal-api.hf.space/api/analyze', { 
         text: textToSend, 
         generate_explanation: true 
       }, { headers, timeout: 120000 });
@@ -499,7 +499,7 @@ export default function Dashboard() {
       setMessages([{ role: 'user', content: textToSend }, { role: 'ai', content: res.data.explanation }]);
       
       if (token) {
-         const hRes = await axios.get('http://localhost:8000/api/history', { headers });
+         const hRes = await axios.get('https://chnitu-legal-api.hf.space/api/history', { headers });
          setChats(hRes.data.map(item => ({ id: item.id, title: item.excerpt.substring(0, 35) + '...', date: item.date, full: item })));
       }
     } catch (err) {
