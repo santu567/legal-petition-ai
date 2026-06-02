@@ -1,4 +1,5 @@
 import os
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -313,35 +314,26 @@ async def analyze(
         # Step 2 — Confidence band
         band = get_band(result["prediction"], result["confidence"])
 
-        # Step 3 & 4 — Parallelize Explanation and Retrieval
-        import asyncio
+        # Step 3 & 4 — Run Explanation and Retrieval sequentially to prevent OpenMP CPU thrashing/crashes
         from services.generator import generate_explanation as gen_task
         from services.retriever import find_similar_cases as ret_task
 
-        async def get_explanation():
-            if not request.generate_explanation:
-                return ""
+        explanation = ""
+        if request.generate_explanation:
             try:
-                # Run CPU/GPU bound task in thread
-                res = await asyncio.to_thread(gen_task, text, result["prediction"])
-                return res["explanation"]
+                res = gen_task(text, result["prediction"])
+                explanation = res["explanation"]
             except Exception as e:
                 print(f"  ⚠ Explanation failed: {str(e)}")
-                return "Analysis rationale temporarily unavailable."
+                explanation = "Analysis rationale temporarily unavailable."
 
-        async def get_similar():
-            try:
-                return await asyncio.to_thread(ret_task, text, 3)
-            except Exception as e:
-                print(f"  ⚠ Retrieval failed: {str(e)}")
-                import traceback
-                return [{"error": str(e), "traceback": traceback.format_exc()}]
-
-        # Execute concurrently
-        explanation, similar = await asyncio.gather(
-            get_explanation(),
-            get_similar()
-        )
+        similar = []
+        try:
+            similar = ret_task(text, 3)
+        except Exception as e:
+            print(f"  ⚠ Retrieval failed: {str(e)}")
+            import traceback
+            similar = [{"error": str(e), "traceback": traceback.format_exc()}]
         p_time_end = time.time()
         print(f"  ✓ Sub-tasks completed in {p_time_end - p_time:.2f}s")
 
