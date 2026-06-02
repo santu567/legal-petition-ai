@@ -336,11 +336,42 @@ function LegalAnalysisCard({ result, onNodeClick }) {
   const text = result.explanation;
   const isAdmitted = result.prediction === 'ADMITTED';
 
-  // Robust Regex-based parser to handle markdown asterisks and flexible numbering
+  // Robust Regex-based parser to handle markdown asterisks, colons, and flexible newline delimiters
   const getSection = (num) => {
-    const regex = new RegExp(`${num}\\.\\s*(?:\\*\\*)?[^\\*:]+(?:\\*\\*)?\\s*:\\s*([\\s\\S]*?)(?=\\n\\d\\.|$)`, 'i');
+    const regex = new RegExp(`${num}\\.\\s*(?:\\*\\*)?[^\\*\\n:]+(?:\\*\\*)?\\s*(?::|\\n)\\s*([\\s\\S]*?)(?=\\n\\d\\.|\\n####|$)`, 'i');
     const match = text.match(regex);
     return match ? match[1].trim() : "Data pending matrix execution...";
+  };
+
+  const sectionKeyMap = {
+    1: 'reason',
+    2: 'improvements',
+    3: 'grounds',
+    4: 'summary'
+  };
+
+  const getSectionContent = (num) => {
+    const key = sectionKeyMap[num];
+    if (result.explanation_sections && result.explanation_sections[key]) {
+      const val = result.explanation_sections[key].trim();
+      const defaultPhrases = [
+        "information pending",
+        "no specific improvements",
+        "statutory grounds pending",
+        "summary analysis pending"
+      ];
+      const isDefault = defaultPhrases.some(phrase => val.toLowerCase().includes(phrase));
+      if (!isDefault) {
+        return val;
+      }
+      // If backend returned a default string, check if the regex parser can find better content in explanation
+      const regexVal = getSection(num);
+      if (regexVal && regexVal !== "Data pending matrix execution...") {
+        return regexVal;
+      }
+      return val;
+    }
+    return getSection(num);
   };
 
   const labels = isAdmitted ? [
@@ -356,10 +387,10 @@ function LegalAnalysisCard({ result, onNodeClick }) {
   ];
 
   const analysisMatrix = [
-    { label: labels[0], content: getSection(1) },
-    { label: labels[1], content: getSection(2) },
-    { label: labels[2], content: getSection(3) },
-    { label: labels[3], content: getSection(4) }
+    { label: labels[0], content: getSectionContent(1) },
+    { label: labels[1], content: getSectionContent(2) },
+    { label: labels[2], content: getSectionContent(3) },
+    { label: labels[3], content: getSectionContent(4) }
   ];
   
   return (

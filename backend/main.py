@@ -319,10 +319,12 @@ async def analyze(
         from services.retriever import find_similar_cases as ret_task
 
         explanation = ""
+        explanation_sections = None
         if request.generate_explanation:
             try:
                 res = gen_task(text, result["prediction"])
                 explanation = res["explanation"]
+                explanation_sections = res["sections"]
             except Exception as e:
                 print(f"  ⚠ Explanation failed: {str(e)}")
                 explanation = "Analysis rationale temporarily unavailable."
@@ -368,6 +370,7 @@ async def analyze(
             "band_message" : band["band_message"],
             "urgency"      : band["urgency"],
             "explanation"  : explanation,
+            "explanation_sections": explanation_sections,
             "similar_cases": similar,
             "latency"      : round(total_time, 2)
         }
