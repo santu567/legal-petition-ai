@@ -119,8 +119,14 @@ def parse_explanation_text(text: str) -> dict:
         for target, aliases in mapping.items():
             for alias in aliases:
                 if alias in data:
-                    extracted[target] = str(data[alias]).strip()
-                    break
+                    val = data[alias]
+                    if isinstance(val, list):
+                        val = ", ".join([str(x).strip() for x in val if str(x).strip()])
+                    else:
+                        val = str(val).strip()
+                    if val:
+                        extracted[target] = val
+                        break
             if target not in extracted:
                 extracted[target] = sections[target]
         return extracted
@@ -162,7 +168,8 @@ def parse_explanation_text(text: str) -> dict:
             # Clean escaping
             content = content.replace('\\"', '"').replace('\\n', '\n').strip()
             
-            if content:
+            # Ignore it if it's just another header or empty
+            if content and not content.startswith("#") and not re.match(r'^\d+\.', content):
                 sections[key] = content
 
         return sections
@@ -181,14 +188,13 @@ def generate_explanation(text: str, prediction: str) -> dict:
 
     system_prompt = (
         "You are a senior Indian legal advocate specializing in Supreme Court and High Court litigation. "
-        "Analyze the petition and return a JSON object with exactly the following keys:\n"
-        "{\n"
-        "  \"reason\": \"A brief 1-2 sentence explanation of the legal/jurisdictional grounds for the outcome.\",\n"
-        "  \"improvements\": \"2-3 concise strengths or required improvements (1 short sentence each).\",\n"
-        "  \"grounds\": \"1-2 specific statutes, articles, or precedents to reinforce (1 short sentence).\",\n"
-        "  \"summary\": \"A short 1-2 sentence summary of the main reason and recommended strategy.\"\n"
-        "}\n"
-        "Output ONLY raw JSON. Do not include markdown code blocks or any conversational text outside the JSON. Keep descriptions very concise."
+        "Analyze the petition and return a JSON object with exactly the keys: \"reason\", \"improvements\", \"grounds\", \"summary\".\n"
+        "Fill in the keys based on these instructions:\n"
+        "- \"reason\": 1-2 sentences explaining why the petition was rejected or admitted.\n"
+        "- \"improvements\": 1-2 concrete suggestions on how to improve the petition (e.g. 'File a condonation of delay application explaining the 90-day delay' or 'Provide proper documentary evidence'). Do not leave this empty.\n"
+        "- \"grounds\": 1-2 legal provisions, constitutional articles (e.g. Article 226, Article 21), or statutes (e.g. Limitation Act) to strengthen. Do not leave this empty.\n"
+        "- \"summary\": 1-2 sentences summarizing the recommended legal strategy.\n"
+        "Output ONLY raw JSON. Do not include markdown code blocks or any conversational text outside the JSON. Ensure every field is filled."
     )
 
     if prediction == "ADMITTED":
