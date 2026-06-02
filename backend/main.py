@@ -334,7 +334,8 @@ async def analyze(
                 return await asyncio.to_thread(ret_task, text, 3)
             except Exception as e:
                 print(f"  ⚠ Retrieval failed: {str(e)}")
-                return []
+                import traceback
+                return [{"error": str(e), "traceback": traceback.format_exc()}]
 
         # Execute concurrently
         explanation, similar = await asyncio.gather(
