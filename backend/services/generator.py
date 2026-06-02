@@ -139,7 +139,7 @@ Petition: {text}
     with torch.no_grad():
         generated_ids = _model.generate(
             **model_inputs,
-            max_new_tokens=450, # Significantly increased for elaboration
+            max_new_tokens=200, # Optimized for speed on Hugging Face CPU
             temperature=0.2, 
             do_sample=True,
             top_p=0.9,

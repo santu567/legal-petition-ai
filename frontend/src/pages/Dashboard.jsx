@@ -493,7 +493,7 @@ export default function Dashboard() {
       const res = await axios.post('https://chnitu-legal-api.hf.space/api/analyze', { 
         text: textToSend, 
         generate_explanation: true 
-      }, { headers, timeout: 120000 });
+      }, { headers, timeout: 300000 });
       
       setPredictionResult(res.data);
       setMessages([{ role: 'user', content: textToSend }, { role: 'ai', content: res.data.explanation }]);
