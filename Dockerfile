@@ -29,6 +29,9 @@ RUN pip install --no-cache-dir PyMuPDF PyJWT passlib bcrypt
 # Copy the entire backend folder into /app/backend
 COPY backend /app/backend
 
+# Copy the pre-built FAISS index and JSON metadata into the container
+COPY ml/data/embeddings /app/ml/data/embeddings
+
 # Set huggingface specific environment variables
 ENV TRANSFORMERS_CACHE="/app/.cache/huggingface"
 ENV HF_HOME="/app/.cache/huggingface"
