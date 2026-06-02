@@ -1,3 +1,12 @@
+---
+title: Legal API
+emoji: ⚖️
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+pinned: false
+---
+
 # ⚖️ LegalAI — Court Petition Admission Predictor
 
 > AI-powered platform that predicts whether an Indian Supreme Court or High Court 

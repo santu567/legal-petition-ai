@@ -5,11 +5,13 @@ node_modules/
 frontend/node_modules/
 *.pt
 *.bin
+!ml/data/embeddings/faiss_index.bin
 *.out
 *.log
 *.safetensors
 *.csv
 .DS_Store
+
 
 # Ignore massive AI Neural Networks to avoid GitHub 100MB crash
 ml/models/

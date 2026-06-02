@@ -107,7 +107,7 @@ async def startup():
     try:
         from services.classifier import load_model as l1
         from services.generator import load_model as l2
-        from services.retriever import load_model as l3
+        from services.retriever import load_model as l3, load_index as load_faiss_index
         
         print("▸ Loading Classifier...")
         l1()
@@ -115,6 +115,8 @@ async def startup():
         l2()
         print("▸ Loading FAISS Retriever...")
         l3()
+        print("▸ Loading FAISS Index...")
+        load_faiss_index()
         
         print("="*50)
         print("✅ ALL MODELS ONLINE")

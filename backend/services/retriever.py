@@ -1,12 +1,13 @@
 # backend/services/retriever.py
 
-import faiss
 import numpy as np
 import pandas as pd
 import torch
 import os
 import pickle
 from transformers import AutoTokenizer, AutoModel
+import faiss
+
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 MODEL_PATH = "chnitu/legal-petition-v1"
@@ -20,7 +21,7 @@ INDEX_PATH = os.path.join(
 )
 META_PATH  = os.path.join(
     os.path.dirname(__file__),
-    "../../ml/data/embeddings/metadata.pkl"
+    "../../ml/data/embeddings/metadata.json"
 )
 
 # Global
@@ -80,8 +81,18 @@ def build_index():
     print("Building FAISS index from training data...")
     print("This takes ~30 minutes — run once only!")
 
-    df = pd.read_csv(DATA_PATH)
-    df = df.dropna(subset=['text'])
+    if not os.path.exists(DATA_PATH):
+        if os.path.exists(META_PATH):
+            print(f"DATA_PATH ({DATA_PATH}) not found. Attempting to rebuild FAISS index from metadata.json...")
+            import json
+            with open(META_PATH, 'r', encoding='utf-8') as f:
+                metadata = json.load(f)
+            df = pd.DataFrame(metadata)
+        else:
+            raise FileNotFoundError(f"Neither training data ({DATA_PATH}) nor metadata ({META_PATH}) found. Cannot build FAISS index.")
+    else:
+        df = pd.read_csv(DATA_PATH)
+        df = df.dropna(subset=['text'])
 
     # Use subset for faster building — 5000 cases
     # Still gives excellent similar case retrieval
@@ -112,9 +123,10 @@ def build_index():
     faiss.write_index(index, INDEX_PATH)
 
     # Save metadata
+    import json
     metadata = df[['text', 'label']].to_dict('records')
-    with open(META_PATH, 'wb') as f:
-        pickle.dump(metadata, f)
+    with open(META_PATH, 'w', encoding='utf-8') as f:
+        json.dump(metadata, f, ensure_ascii=False, indent=2)
 
     print(f"FAISS index built! {index.ntotal} cases indexed.")
     return index, metadata
@@ -134,8 +146,9 @@ def load_index():
 
     print("Loading FAISS index...")
     _index = faiss.read_index(INDEX_PATH)
-    with open(META_PATH, 'rb') as f:
-        _metadata = pickle.load(f)
+    import json
+    with open(META_PATH, 'r', encoding='utf-8') as f:
+        _metadata = json.load(f)
     print(f"FAISS index loaded! {_index.ntotal} cases.")
     return _index, _metadata
 
