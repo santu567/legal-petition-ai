@@ -99,26 +99,27 @@ def generate_explanation(text: str, prediction: str) -> dict:
 
     system_prompt = (
         "You are a senior Indian legal advocate specializing in Supreme Court and High Court litigation. "
-        "Provide a comprehensive, authoritative, and multi-faceted legal analysis. Be elaborate and detailed."
+        "Keep your analysis extremely concise and structured. Each of the 4 sections must be exactly 2-3 short sentences. "
+        "Do not write long paragraphs so the entire response is completed quickly."
     )
 
     if prediction == "ADMITTED":
         user_prompt = f"""
-The following petition was ADMITTED based on initial classification. Provide a deep structural analysis using EXACTLY these 4 headers:
-1. REASON FOR ADMISSION: [Elaborate extensively on the core constitutional or legal grounds that justify admission. Detail why current laws and precedents favor this matter.]
-2. KEY STRENGTHS: [Identify and explain 3-4 major strengths in the petition's logic, factual background, or legal framing.]
-3. LEGAL GROUNDS TO STRENGTHEN: [Even as an admitted case, provide a detailed recommendation on which legal precedents or constitutional articles should be reinforced to ensure final victory.]
-4. EXPLANATION OF ADMISSION (SUMMARY): [A detailed 4-5 sentence summary of the overall analysis.]
+The following petition was ADMITTED based on initial classification. Provide a structured analysis using EXACTLY these 4 headers:
+1. REASON FOR ADMISSION: [In exactly 2-3 short sentences, explain the core constitutional/legal grounds justifying admission.]
+2. KEY STRENGTHS: [List 3 concise points in 1 short sentence each.]
+3. LEGAL GROUNDS TO STRENGTHEN: [List 2 concise recommendations in 1 short sentence each.]
+4. EXPLANATION OF ADMISSION (SUMMARY): [A brief 2-3 sentence summary of the overall analysis.]
 
 Petition: {text}
 """
     else:
         user_prompt = f"""
-The following petition was REJECTED based on initial classification. Provide a deep structural analysis using EXACTLY these 4 headers:
-1. REASON FOR REJECTION: [Provide an exhaustive legal explanation for the rejection. Cite potential jurisdictional overlaps, lack of locus standi, or procedural non-compliance in detail. Do not be brief.]
-2. REQUIRED IMPROVEMENTS TO REAPPLY: [List 4-5 highly detailed and specific legal/procedural improvements required to make this petition fit for filing. Describe how to implement each improvement.]
-3. LEGAL GROUNDS TO STRENGTHEN: [Analyze and detail specific legal grounds—statutes, articles, or previous judgments—that were weak and need thorough research and reinforcement.]
-4. EXPLANATION OF REJECTION (SUMMARY): [A detailed 4-5 sentence summary of why this petition was deemed insufficient and what the core strategy should be moving forward.]
+The following petition was REJECTED based on initial classification. Provide a structured analysis using EXACTLY these 4 headers:
+1. REASON FOR REJECTION: [In exactly 2-3 short sentences, explain the core legal and jurisdictional grounds for rejection.]
+2. REQUIRED IMPROVEMENTS TO REAPPLY: [List 3 concise procedural or factual improvements in 1 short sentence each.]
+3. LEGAL GROUNDS TO STRENGTHEN: [In exactly 2-3 short sentences, identify the specific statutes, articles, or precedents that need reinforcement.]
+4. EXPLANATION OF REJECTION (SUMMARY): [A brief 2-3 sentence summary of the main reason for rejection.]
 
 Petition: {text}
 """
@@ -139,7 +140,7 @@ Petition: {text}
     with torch.no_grad():
         generated_ids = _model.generate(
             **model_inputs,
-            max_new_tokens=200, # Optimized for speed on Hugging Face CPU
+            max_new_tokens=300, # Optimized and increased to prevent truncation while remaining fast
             temperature=0.2, 
             do_sample=True,
             top_p=0.9,
